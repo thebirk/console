@@ -77,7 +77,6 @@ void _console_audio_callback(void *userdata, uint8_t *data, int len) {
 		}
 
 		int time = ((float)(len / 2) / (float)44100) * 1000;
-		printf("time: %d, len: %d\n", time, len);
 		state->beeper_time -= time;
 	}
 	else {
@@ -119,7 +118,7 @@ bool console_init(const char *title, int w, int h, const char *tileset, int cell
 		return false;
 	}
 
-	state.renderer = SDL_CreateRenderer(state.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	state.renderer = SDL_CreateRenderer(state.window, -1, SDL_RENDERER_ACCELERATED);
 	if (!state.renderer) {
 		return false;
 	}
@@ -249,6 +248,9 @@ Key console_readkey(void) {
 		SDL_LockMutex(state.keys_mutex);
 		KeyPress *kp = state.first_key;
 		state.first_key = kp->next;
+		if (!state.first_key) {
+			state.last_key = 0;
+		}
 		Key result = { .key = kp->key, .mod = kp->mod };
 		SDL_UnlockMutex(state.keys_mutex);
 		return result;
@@ -349,4 +351,5 @@ void console_beep_freq(int freq, int ms) {
 	state.beeper_time = ms;
 	state.beeper_pos = 0;
 	SDL_PauseAudioDevice(state.beeper, 0);
+	console_sleep(ms);
 }
